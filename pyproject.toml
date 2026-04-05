@@ -34,6 +34,7 @@ dependencies = [
 
 [project.scripts]
 bofusions-geo-mcp = "bofusions_geo_mcp.server:main"
+bofusions-geo = "bofusions_geo_mcp.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/bofusions/bofusions-geo-mcp"
