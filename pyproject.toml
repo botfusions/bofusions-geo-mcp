@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bofusions-geo-mcp"
+version = "1.0.0"
+description = "Bofusions GEO MCP Server — AI Search Engine Optimization (GEO) analysis tools for MCP clients"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Bofusions", email = "info@bofusions.com" },
+]
+keywords = ["mcp", "geo", "seo", "ai-search", "generative-engine-optimization", "bofusions"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "mcp[cli]>=1.6.0",
+    "httpx>=0.27.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "validators>=0.22.0",
+]
+
+[project.scripts]
+bofusions-geo-mcp = "bofusions_geo_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/bofusions/bofusions-geo-mcp"
+Repository = "https://github.com/bofusions/bofusions-geo-mcp"
+Documentation = "https://github.com/bofusions/bofusions-geo-mcp#readme"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bofusions_geo_mcp"]
