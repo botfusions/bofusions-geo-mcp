@@ -5,6 +5,7 @@ from __future__ import annotations
 from urllib.parse import quote_plus
 
 import httpx
+from ..client import _ssl_context, DEFAULT_HEADERS
 
 
 async def run_brand_scan(brand_name: str, domain: str | None = None) -> str:
@@ -80,7 +81,7 @@ async def _check_wikipedia(brand_name: str) -> list[str]:
     """Check Wikipedia and Wikidata for brand presence."""
     lines = ["## Wikipedia & Wikidata", ""]
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with httpx.AsyncClient(timeout=15.0, verify=_ssl_context(), headers=DEFAULT_HEADERS) as client:
             # Wikipedia search
             api_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={quote_plus(brand_name)}&format=json"
             resp = await client.get(api_url)
@@ -120,9 +121,11 @@ async def _check_github(brand_name: str) -> list[str]:
     """Check GitHub for brand presence."""
     lines = ["## GitHub", ""]
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        headers = DEFAULT_HEADERS.copy()
+        headers["Accept"] = "application/vnd.github.v3+json"
+        async with httpx.AsyncClient(timeout=15.0, verify=_ssl_context(), headers=headers) as client:
             api_url = f"https://api.github.com/search/repositories?q={quote_plus(brand_name)}&per_page=5"
-            resp = await client.get(api_url, headers={"Accept": "application/vnd.github.v3+json"})
+            resp = await client.get(api_url)
             if resp.status_code == 200:
                 data = resp.json()
                 total = data.get("total_count", 0)

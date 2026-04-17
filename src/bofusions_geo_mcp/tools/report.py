@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ..client import fetch_page, fetch_robots_txt, fetch_llms_txt
-from ..parser import extract_content_blocks
+from ..parser import extract_content_blocks, rebuild_minimal_html
 from ..scoring import score_passage, calculate_geo_score
 from .citability import run_citability
 from .technical import run_technical
@@ -21,7 +21,7 @@ async def run_report(url: str, brand_name: str | None = None) -> str:
     citability_scores = []
     if page["text_content"]:
         blocks = extract_content_blocks(
-            _rebuild_html(page["heading_structure"], page["text_content"])
+            rebuild_minimal_html(page["heading_structure"], page["text_content"])
         )
         for block in blocks:
             if block["word_count"] >= 20:
@@ -195,11 +195,3 @@ async def run_report(url: str, brand_name: str | None = None) -> str:
     ])
 
     return "\n".join(lines)
-
-
-def _rebuild_html(headings: list, text: str) -> str:
-    parts = []
-    for h in headings:
-        parts.append(f"<h{h['level']}>{h['text']}</h{h['level']}>")
-    parts.append(f"<p>{text}</p>")
-    return "".join(parts)
