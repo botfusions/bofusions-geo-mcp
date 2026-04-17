@@ -2,51 +2,25 @@
 
 from __future__ import annotations
 
-import httpx
-from bs4 import BeautifulSoup
-
+from ..client import fetch_page
+from ..parser import extract_content_blocks, rebuild_minimal_html
 from ..scoring import score_passage
 
 
 async def run_citability(url: str) -> str:
     """Analyze page content blocks for AI citability."""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-    }
+    page = await fetch_page(url)
 
-    try:
-        async with httpx.AsyncClient(headers=headers, timeout=30.0, follow_redirects=True) as client:
-            response = await client.get(url)
-            response.raise_for_status()
-    except Exception as e:
-        return f"# Citability Analysis Error\n\nFailed to fetch `{url}`:\n{e}"
+    if page["status_code"] is None:
+        return f"# Citability Analysis Error\n\nFailed to fetch `{url}`:\n- " + "\n- ".join(page.get("errors", []))
 
-    soup = BeautifulSoup(response.text, "lxml")
-    for el in soup.find_all(["script", "style", "nav", "footer", "header", "aside", "form"]):
-        el.decompose()
+    # Extract content blocks using unified parser
+    blocks = extract_content_blocks(
+        rebuild_minimal_html(page["heading_structure"], page["text_content"])
+    )
 
-    # Extract content blocks
-    blocks = []
-    current_heading = "Introduction"
-    current_paragraphs: list[str] = []
-
-    for element in soup.find_all(["h1", "h2", "h3", "h4", "p", "ul", "ol", "table"]):
-        if element.name and element.name.startswith("h"):
-            if current_paragraphs:
-                combined = " ".join(current_paragraphs)
-                if len(combined.split()) >= 20:
-                    blocks.append({"heading": current_heading, "content": combined})
-            current_heading = element.get_text(strip=True)
-            current_paragraphs = []
-        else:
-            text = element.get_text(strip=True)
-            if text and len(text.split()) >= 5:
-                current_paragraphs.append(text)
-
-    if current_paragraphs:
-        combined = " ".join(current_paragraphs)
-        if len(combined.split()) >= 20:
-            blocks.append({"heading": current_heading, "content": combined})
+    # Filter out very short blocks
+    blocks = [b for b in blocks if b["word_count"] >= 20]
 
     if not blocks:
         return f"# Citability Analysis: {url}\n\nNo analyzable content blocks found."

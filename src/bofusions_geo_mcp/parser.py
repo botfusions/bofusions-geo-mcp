@@ -12,7 +12,7 @@ def extract_content_blocks(html: str) -> list[dict[str, Any]]:
     """Extract content blocks (sections between headings) for citability analysis."""
     soup = BeautifulSoup(html, "lxml")
 
-    for el in soup.find_all(["script", "style", "nav", "footer", "header", "aside"]):
+    for el in soup.find_all(["script", "style", "nav", "footer", "header", "aside", "form"]):
         el.decompose()
 
     blocks: list[dict[str, Any]] = []
@@ -37,6 +37,15 @@ def extract_content_blocks(html: str) -> list[dict[str, Any]]:
         blocks.append({"heading": current_heading, "content": text, "word_count": len(text.split())})
 
     return blocks
+
+
+def rebuild_minimal_html(headings: list[dict[str, Any]], text: str) -> str:
+    """Rebuild minimal HTML for content block extraction."""
+    parts = []
+    for h in headings:
+        parts.append(f"<h{h['level']}>{h['text']}</h{h['level']}>")
+    parts.append(f"<p>{text}</p>")
+    return "".join(parts)
 
 
 def extract_schema_data(html: str) -> list[dict[str, Any]]:
